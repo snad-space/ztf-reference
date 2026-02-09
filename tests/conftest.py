@@ -5,6 +5,7 @@ import pytest
 # Only load app-related fixtures when asyncpg is available (app test environment)
 try:
     import asyncpg
+    import pytest_asyncio
     from ztf_reference.main import get_app
     from ztf_reference.pg_sphere import connection_setup
 
@@ -16,7 +17,7 @@ try:
             "user": os.environ.get("TEST_DB_USER", "ztfref"),
         }
 
-    @pytest.fixture
+    @pytest_asyncio.fixture
     async def seed_db(db_params):
         """Insert test data into the database."""
         pool = await asyncpg.create_pool(**db_params, setup=connection_setup)
@@ -44,7 +45,7 @@ try:
             )
         await pool.close()
 
-    @pytest.fixture
+    @pytest_asyncio.fixture
     async def client(aiohttp_client, seed_db, db_params):
         os.environ["DB_HOST"] = db_params["host"]
         os.environ["DB_NAME"] = db_params["database"]

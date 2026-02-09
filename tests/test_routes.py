@@ -1,7 +1,6 @@
 import pytest
 
 
-@pytest.mark.asyncio
 async def test_health(client):
     resp = await client.get("/api/v1/health")
     assert resp.status == 200
@@ -9,7 +8,6 @@ async def test_health(client):
     assert data["status"] == "ok"
 
 
-@pytest.mark.asyncio
 async def test_source_found(client):
     resp = await client.get(
         "/api/v1/source",
@@ -25,7 +23,6 @@ async def test_source_found(client):
     assert data["infobits"] == 16
 
 
-@pytest.mark.asyncio
 async def test_source_not_found(client):
     resp = await client.get(
         "/api/v1/source",
@@ -34,7 +31,6 @@ async def test_source_not_found(client):
     assert resp.status == 404
 
 
-@pytest.mark.asyncio
 async def test_source_missing_param(client):
     resp = await client.get(
         "/api/v1/source",
@@ -43,7 +39,6 @@ async def test_source_missing_param(client):
     assert resp.status == 400
 
 
-@pytest.mark.asyncio
 async def test_cone_search(client):
     resp = await client.get(
         "/api/v1/cone",
@@ -55,7 +50,6 @@ async def test_cone_search(client):
     assert data[0]["fieldid"] == 202
 
 
-@pytest.mark.asyncio
 async def test_cone_search_with_filter(client):
     resp = await client.get(
         "/api/v1/cone",
@@ -66,7 +60,6 @@ async def test_cone_search_with_filter(client):
     assert len(data) == 0
 
 
-@pytest.mark.asyncio
 async def test_cone_invalid_radius(client):
     resp = await client.get(
         "/api/v1/cone",
