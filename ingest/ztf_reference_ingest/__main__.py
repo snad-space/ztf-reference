@@ -6,6 +6,7 @@ import logging
 import os
 import tempfile
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from pathlib import Path
 
 import click
 import httpx
@@ -54,6 +55,22 @@ def process_one(ref: FileRef, conninfo: str, tmpdir: str) -> tuple[str, int]:
         conn.close()
 
 
+def ingest_local_file(filepath: Path, conninfo: str) -> int:
+    """Ingest a single local FITS file into the database."""
+    catalog = parse_fits(filepath)
+    ref = FileRef(
+        fieldid=catalog.fieldid,
+        filter=catalog.filter,
+        ccdid=catalog.ccdid,
+        qid=catalog.qid,
+    )
+    conn = psycopg.connect(conninfo, autocommit=False)
+    try:
+        return ingest_catalog(conn, catalog, ref)
+    finally:
+        conn.close()
+
+
 @click.command()
 @click.option("--workers", default=10, help="Number of parallel download workers")
 @click.option(
@@ -67,14 +84,38 @@ def process_one(ref: FileRef, conninfo: str, tmpdir: str) -> tuple[str, int]:
     help="Only process specific filters",
 )
 @click.option("--dry-run", is_flag=True, help="List files without downloading")
+@click.option(
+    "--from-file",
+    "from_files",
+    type=click.Path(exists=True, path_type=Path),
+    multiple=True,
+    help="Ingest local FITS file(s) instead of downloading from IRSA",
+)
 def main(
-    workers: int, fieldid: tuple[int, ...], filters: tuple[str, ...], dry_run: bool
+    workers: int,
+    fieldid: tuple[int, ...],
+    filters: tuple[str, ...],
+    dry_run: bool,
+    from_files: tuple[Path, ...],
 ):
     """Ingest ZTF reference PSF catalog files from IRSA."""
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s %(levelname)s %(name)s: %(message)s",
     )
+
+    conninfo = get_conninfo()
+
+    if from_files:
+        total_rows = 0
+        for filepath in from_files:
+            logger.info("Ingesting local file: %s", filepath)
+            count = ingest_local_file(filepath, conninfo)
+            total_rows += count
+        logger.info(
+            "Done: ingested %d file(s), %d rows total", len(from_files), total_rows
+        )
+        return
 
     fieldids = list(fieldid) if fieldid else None
     filter_list = list(filters) if filters else None
@@ -86,7 +127,6 @@ def main(
             click.echo(ref.url)
         return
 
-    conninfo = get_conninfo()
     stats = {"ingested": 0, "skipped": 0, "failed": 0}
     total_rows = 0
 

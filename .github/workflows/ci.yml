@@ -41,6 +41,42 @@ jobs:
           cd ingest
           uv run --with pytest --with astropy pytest ../tests/test_ingest.py -v
 
+  test-integration:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+      - name: Build SQL image
+        run: |
+          docker build -t ztf-reference-sql:test ./sql/
+      - name: Start postgres with pg_sphere
+        run: |
+          docker run -d --name test-postgres \
+            -e POSTGRES_USER=ztfref \
+            -e POSTGRES_PASSWORD=ztfref \
+            -e POSTGRES_HOST_AUTH_METHOD=trust \
+            -p 5432:5432 \
+            ztf-reference-sql:test
+          sleep 10
+      - name: Ingest test fixture
+        env:
+          DB_HOST: localhost
+          DB_NAME: ztfref
+          DB_USER: ztfref
+        run: |
+          cd ingest
+          uv run python -m ztf_reference_ingest --from-file ../tests/fixtures/ztf_000202_zg_c10_q1_refpsfcat.fits
+      - name: Run app tests
+        env:
+          TEST_DB_HOST: localhost
+          TEST_DB_NAME: ztfref
+          TEST_DB_USER: ztfref
+        run: |
+          cd app
+          uv run --with pytest --with pytest-aiohttp --with pytest-asyncio --with asyncpg pytest ../tests/test_routes.py -v
+      - name: Cleanup
+        run: docker stop test-postgres && docker rm test-postgres
+
   docker-build:
     runs-on: ubuntu-latest
     steps:
