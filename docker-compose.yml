@@ -1,0 +1,50 @@
+services:
+  sql:
+    build: ./sql/
+    environment:
+      POSTGRES_USER: ztfref
+      POSTGRES_PASSWORD: ztfref
+    volumes:
+      - sql-data:/var/lib/postgresql/data
+    networks:
+      - app
+    restart: always
+
+  app:
+    build: ./app/
+    environment:
+      DB_HOST: sql
+      DB_NAME: ztfref
+      DB_USER: app
+      VIRTUAL_HOST: ref.ztf.snad.space
+      HTTPS_METHOD: noredirect
+      DYNDNS_HOST: ref.ztf.snad.space
+      LETSENCRYPT_HOST: ref.ztf.snad.space
+      LETSENCRYPT_EMAIL: letsencrypt@snad.space
+    depends_on:
+      - sql
+    networks:
+      - app
+      - proxy
+    restart: always
+
+  ingest:
+    build: ./ingest/
+    environment:
+      DB_HOST: sql
+      DB_NAME: ztfref
+      DB_USER: ingest
+    depends_on:
+      - sql
+    networks:
+      - app
+    profiles:
+      - ingest
+
+volumes:
+  sql-data:
+
+networks:
+  app:
+  proxy:
+    external: true

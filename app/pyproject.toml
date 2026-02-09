@@ -1,0 +1,20 @@
+[project]
+name = "ztf-reference"
+version = "0.1.0"
+requires-python = ">=3.14"
+dependencies = [
+    "aiohttp>=3.9",
+    "asyncpg>=0.29",
+    "gunicorn>=22",
+    "psycopg[binary]>=3.1",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8",
+    "pytest-aiohttp>=1.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
