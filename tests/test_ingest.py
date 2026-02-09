@@ -22,7 +22,10 @@ class TestFileRef:
 
     def test_path(self):
         ref = FileRef(fieldid=202, filter="zg", ccdid=10, qid=1)
-        assert ref.path == "000/field000202/zg/ccd10/q1/ztf_000202_zg_c10_q1_refpsfcat.fits"
+        assert (
+            ref.path
+            == "000/field000202/zg/ccd10/q1/ztf_000202_zg_c10_q1_refpsfcat.fits"
+        )
 
     def test_url(self):
         ref = FileRef(fieldid=202, filter="zg", ccdid=10, qid=1)
@@ -77,3 +80,4 @@ class TestParseFits:
         ra_rad = float(parts[0])
         dec_rad = float(parts[1])
         assert abs(math.degrees(ra_rad) - row[7]) < 0.0001
+        assert abs(math.degrees(dec_rad) - row[8]) < 0.0001

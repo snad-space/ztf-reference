@@ -52,26 +52,28 @@ def parse_fits(filepath: Path) -> ParsedCatalog:
             dec = float(row["dec"])
             coord_sql = f"({math.radians(ra)}, {math.radians(dec)})"
 
-            rows.append((
-                fieldid,
-                filt,
-                ccdid,
-                qid,
-                int(row["sourceid"]),
-                float(row["xpos"]),
-                float(row["ypos"]),
-                ra,
-                dec,
-                coord_sql,
-                float(row["flux"]),
-                float(row["sigflux"]),
-                float(row["mag"]),
-                float(row["sigmag"]),
-                float(row["snr"]),
-                float(row["chi"]),
-                float(row["sharp"]),
-                int(row["flags"]),
-            ))
+            rows.append(
+                (
+                    fieldid,
+                    filt,
+                    ccdid,
+                    qid,
+                    int(row["sourceid"]),
+                    float(row["xpos"]),
+                    float(row["ypos"]),
+                    ra,
+                    dec,
+                    coord_sql,
+                    float(row["flux"]),
+                    float(row["sigflux"]),
+                    float(row["mag"]),
+                    float(row["sigmag"]),
+                    float(row["snr"]),
+                    float(row["chi"]),
+                    float(row["sharp"]),
+                    int(row["flags"]),
+                )
+            )
 
     return ParsedCatalog(
         fieldid=fieldid,

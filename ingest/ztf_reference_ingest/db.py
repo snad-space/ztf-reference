@@ -12,9 +12,24 @@ from .fits import ParsedCatalog
 logger = logging.getLogger(__name__)
 
 SOURCE_COLUMNS = (
-    "fieldid", "filter", "ccdid", "qid", "sourceid",
-    "xpos", "ypos", "ra", "dec", "coord",
-    "flux", "sigflux", "mag", "sigmag", "snr", "chi", "sharp", "flags",
+    "fieldid",
+    "filter",
+    "ccdid",
+    "qid",
+    "sourceid",
+    "xpos",
+    "ypos",
+    "ra",
+    "dec",
+    "coord",
+    "flux",
+    "sigflux",
+    "mag",
+    "sigmag",
+    "snr",
+    "chi",
+    "sharp",
+    "flags",
 )
 
 
@@ -42,8 +57,16 @@ def ingest_catalog(
                           magzp_unc = EXCLUDED.magzp_unc,
                           infobits = EXCLUDED.infobits
             """,
-            (ref.fieldid, ref.filter, ref.ccdid, ref.qid,
-             catalog.magzp, catalog.magzp_rms, catalog.magzp_unc, catalog.infobits),
+            (
+                ref.fieldid,
+                ref.filter,
+                ref.ccdid,
+                ref.qid,
+                catalog.magzp,
+                catalog.magzp_rms,
+                catalog.magzp_unc,
+                catalog.infobits,
+            ),
         )
 
         # Replace source rows for this quadrant
@@ -69,11 +92,23 @@ def ingest_catalog(
                           content_length = EXCLUDED.content_length,
                           ingested_at = now()
             """,
-            (ref.fieldid, ref.filter, ref.ccdid, ref.qid, etag, last_modified, content_length),
+            (
+                ref.fieldid,
+                ref.filter,
+                ref.ccdid,
+                ref.qid,
+                etag,
+                last_modified,
+                content_length,
+            ),
         )
 
     logger.info(
         "Ingested %d rows for field=%d filter=%s ccd=%d qid=%d",
-        len(catalog.rows), ref.fieldid, ref.filter, ref.ccdid, ref.qid,
+        len(catalog.rows),
+        ref.fieldid,
+        ref.filter,
+        ref.ccdid,
+        ref.qid,
     )
     return len(catalog.rows)

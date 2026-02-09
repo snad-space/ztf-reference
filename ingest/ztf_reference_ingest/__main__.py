@@ -37,7 +37,9 @@ def process_one(ref: FileRef, conninfo: str, tmpdir: str) -> tuple[str, int]:
 
         catalog = parse_fits(result.filepath)
         count = ingest_catalog(
-            conn, catalog, ref,
+            conn,
+            catalog,
+            ref,
             etag=result.etag,
             last_modified=result.last_modified,
             content_length=result.content_length,
@@ -54,10 +56,20 @@ def process_one(ref: FileRef, conninfo: str, tmpdir: str) -> tuple[str, int]:
 
 @click.command()
 @click.option("--workers", default=10, help="Number of parallel download workers")
-@click.option("--fieldid", type=int, multiple=True, help="Only process specific field IDs")
-@click.option("--filter", "filters", type=click.Choice(["zg", "zr", "zi"]), multiple=True, help="Only process specific filters")
+@click.option(
+    "--fieldid", type=int, multiple=True, help="Only process specific field IDs"
+)
+@click.option(
+    "--filter",
+    "filters",
+    type=click.Choice(["zg", "zr", "zi"]),
+    multiple=True,
+    help="Only process specific filters",
+)
 @click.option("--dry-run", is_flag=True, help="List files without downloading")
-def main(workers: int, fieldid: tuple[int, ...], filters: tuple[str, ...], dry_run: bool):
+def main(
+    workers: int, fieldid: tuple[int, ...], filters: tuple[str, ...], dry_run: bool
+):
     """Ingest ZTF reference PSF catalog files from IRSA."""
     logging.basicConfig(
         level=logging.INFO,
@@ -81,8 +93,7 @@ def main(workers: int, fieldid: tuple[int, ...], filters: tuple[str, ...], dry_r
     with tempfile.TemporaryDirectory() as tmpdir:
         with ThreadPoolExecutor(max_workers=workers) as executor:
             futures = {
-                executor.submit(process_one, ref, conninfo, tmpdir): ref
-                for ref in refs
+                executor.submit(process_one, ref, conninfo, tmpdir): ref for ref in refs
             }
             for future in as_completed(futures):
                 ref = futures[future]
@@ -92,7 +103,10 @@ def main(workers: int, fieldid: tuple[int, ...], filters: tuple[str, ...], dry_r
 
     logger.info(
         "Done: %d ingested (%d rows), %d skipped, %d failed",
-        stats["ingested"], total_rows, stats["skipped"], stats["failed"],
+        stats["ingested"],
+        total_rows,
+        stats["skipped"],
+        stats["failed"],
     )
 
 

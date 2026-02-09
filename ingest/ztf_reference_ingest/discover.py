@@ -57,7 +57,9 @@ def generate_all_refs(
         for filt in filter_list:
             for ccdid in range(1, 17):
                 for qid in range(1, 5):
-                    refs.append(FileRef(fieldid=fieldid, filter=filt, ccdid=ccdid, qid=qid))
+                    refs.append(
+                        FileRef(fieldid=fieldid, filter=filt, ccdid=ccdid, qid=qid)
+                    )
     return refs
 
 

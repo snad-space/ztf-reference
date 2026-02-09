@@ -1,6 +1,13 @@
 from __future__ import annotations
 
-from aiohttp.web import RouteTableDef, Request, Response, json_response, HTTPBadRequest, HTTPNotFound
+from aiohttp.web import (
+    RouteTableDef,
+    Request,
+    Response,
+    json_response,
+    HTTPBadRequest,
+    HTTPNotFound,
+)
 
 from .pg_sphere import SCircle, SPoint
 
@@ -10,10 +17,27 @@ MAX_RADIUS_ARCSEC = 60.0
 MAX_CONE_RESULTS = 1000
 
 RESULT_COLUMNS = (
-    "fieldid", "filter", "ccdid", "qid", "sourceid",
-    "xpos", "ypos", "ra", "dec",
-    "flux", "sigflux", "mag", "sigmag", "snr", "chi", "sharp", "flags",
-    "magzp", "magzp_rms", "magzp_unc", "infobits",
+    "fieldid",
+    "filter",
+    "ccdid",
+    "qid",
+    "sourceid",
+    "xpos",
+    "ypos",
+    "ra",
+    "dec",
+    "flux",
+    "sigflux",
+    "mag",
+    "sigmag",
+    "snr",
+    "chi",
+    "sharp",
+    "flags",
+    "magzp",
+    "magzp_rms",
+    "magzp_unc",
+    "infobits",
 )
 
 SELECT_COLS = ", ".join(RESULT_COLUMNS)
@@ -59,7 +83,11 @@ async def source(request: Request) -> Response:
             FROM refpsfcat_full
             WHERE fieldid = $1 AND filter = $2 AND ccdid = $3 AND qid = $4 AND sourceid = $5
             """,
-            fieldid, filt, ccdid, qid, sourceid,
+            fieldid,
+            filt,
+            ccdid,
+            qid,
+            sourceid,
         )
 
     if row is None:
@@ -75,12 +103,16 @@ async def cone(request: Request) -> Response:
         dec = float(request.query["dec"])
         radius_arcsec = float(request.query["radius_arcsec"])
     except KeyError:
-        raise HTTPBadRequest(reason='All of "ra", "dec" and "radius_arcsec" must be specified')
+        raise HTTPBadRequest(
+            reason='All of "ra", "dec" and "radius_arcsec" must be specified'
+        )
     except ValueError:
         raise HTTPBadRequest(reason='"ra", "dec" and "radius_arcsec" must be floats')
 
     if radius_arcsec <= 0 or radius_arcsec > MAX_RADIUS_ARCSEC:
-        raise HTTPBadRequest(reason=f'"radius_arcsec" must be positive and at most {MAX_RADIUS_ARCSEC}')
+        raise HTTPBadRequest(
+            reason=f'"radius_arcsec" must be positive and at most {MAX_RADIUS_ARCSEC}'
+        )
 
     circle = SCircle(point=SPoint(ra=ra, dec=dec), radius_arcsec=radius_arcsec)
 

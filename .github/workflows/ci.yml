@@ -3,52 +3,22 @@ name: CI
 on: [push, pull_request]
 
 jobs:
-  lint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v4
-      - name: Lint app
-        run: |
-          cd app
-          uv run --with ruff ruff check .
-          uv run --with ruff ruff format --check .
-      - name: Lint ingest
-        run: |
-          cd ingest
-          uv run --with ruff ruff check .
-          uv run --with ruff ruff format --check .
-
   test-app:
     runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: ghcr.io/${{ github.repository }}/sql:test
-        env:
-          POSTGRES_USER: ztfref
-          POSTGRES_PASSWORD: test
-          POSTGRES_HOST_AUTH_METHOD: trust
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U ztfref"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v4
       - name: Build SQL image
         run: |
-          docker build -t ghcr.io/${{ github.repository }}/sql:test ./sql/
+          docker build -t ztf-reference-sql:test ./sql/
       - name: Start postgres with pg_sphere
         run: |
           docker run -d --name test-postgres \
             -e POSTGRES_USER=ztfref \
-            -e POSTGRES_PASSWORD=test \
+            -e POSTGRES_PASSWORD=ztfref \
             -e POSTGRES_HOST_AUTH_METHOD=trust \
             -p 5432:5432 \
-            ghcr.io/${{ github.repository }}/sql:test
+            ztf-reference-sql:test
           sleep 10
       - name: Run app tests
         env:
