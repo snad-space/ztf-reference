@@ -18,7 +18,7 @@ async def test_source_found(client):
     assert data["fieldid"] == 202
     assert data["filter"] == "zg"
     assert data["sourceid"] == 0
-    assert abs(data["ra"] - 24.99) < 0.001
+    assert data["ra"] == pytest.approx(24.9859705, abs=1e-5)
     assert data["magzp"] == pytest.approx(26.325, abs=0.001)
     assert data["infobits"] == 16
 
@@ -42,7 +42,7 @@ async def test_source_missing_param(client):
 async def test_cone_search(client):
     resp = await client.get(
         "/api/v1/cone",
-        params={"ra": 24.99, "dec": -29.61, "radius_arcsec": 60},
+        params={"ra": 24.986, "dec": -29.609, "radius_arcsec": 60},
     )
     assert resp.status == 200
     data = await resp.json()
@@ -53,7 +53,7 @@ async def test_cone_search(client):
 async def test_cone_search_with_filter(client):
     resp = await client.get(
         "/api/v1/cone",
-        params={"ra": 24.99, "dec": -29.61, "radius_arcsec": 60, "filter": "zr"},
+        params={"ra": 24.986, "dec": -29.609, "radius_arcsec": 60, "filter": "zr"},
     )
     assert resp.status == 200
     data = await resp.json()
@@ -63,6 +63,6 @@ async def test_cone_search_with_filter(client):
 async def test_cone_invalid_radius(client):
     resp = await client.get(
         "/api/v1/cone",
-        params={"ra": 24.99, "dec": -29.61, "radius_arcsec": 100},
+        params={"ra": 24.986, "dec": -29.609, "radius_arcsec": 100},
     )
     assert resp.status == 400

@@ -25,7 +25,7 @@ try:
             await con.execute(
                 """
                 INSERT INTO quadrant (fieldid, filter, ccdid, qid, magzp, magzp_rms, magzp_unc, infobits)
-                VALUES (202, 'zg', 10, 1, 26.325, 0.037, 0.015, 16)
+                VALUES (202, 'zg', 10, 1, 26.325, 0.0873030188, 0.0004818736, 16)
                 ON CONFLICT DO NOTHING
                 """
             )
@@ -34,12 +34,12 @@ try:
                 INSERT INTO refpsfcat (fieldid, filter, ccdid, qid, sourceid, xpos, ypos, ra, dec, coord,
                                        flux, sigflux, mag, sigmag, snr, chi, sharp, flags)
                 VALUES
-                    (202, 'zg', 10, 1, 0, 100.5, 200.3, 24.99, -29.61,
-                     spoint(radians(24.99), radians(-29.61)),
-                     1000.0, 10.0, 18.5, 0.01, 100.0, 1.0, 0.01, 0),
-                    (202, 'zg', 10, 1, 1, 150.2, 300.1, 25.01, -29.60,
-                     spoint(radians(25.01), radians(-29.60)),
-                     800.0, 12.0, 18.8, 0.02, 66.7, 1.1, 0.02, 0)
+                    (202, 'zg', 10, 1, 0, 119.791, 61.432, 24.9859705, -29.6089428,
+                     spoint(radians(24.9859705), radians(-29.6089428)),
+                     237.02818, 18.01066, -5.937, 0.083, 13.16, 1.009, -0.058, 0),
+                    (202, 'zg', 10, 1, 1, 1354.238, 62.677, 25.3803179, -29.6047335,
+                     spoint(radians(25.3803179), radians(-29.6047335)),
+                     68.48572, 21.969954, -4.589, 0.348, 3.12, 1.459, -0.452, 0)
                 ON CONFLICT DO NOTHING
                 """
             )
