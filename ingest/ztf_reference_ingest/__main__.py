@@ -71,6 +71,17 @@ def ingest_local_file(filepath: Path, conninfo: str) -> int:
         conn.close()
 
 
+def _analyze(conninfo: str) -> None:
+    """Run ANALYZE to update pg_class.reltuples for the /stats endpoint."""
+    conn = psycopg.connect(conninfo, autocommit=True)
+    try:
+        conn.execute("ANALYZE quadrant")
+        conn.execute("ANALYZE refpsfcat")
+        logger.info("ANALYZE completed for quadrant and refpsfcat")
+    finally:
+        conn.close()
+
+
 def _env_ints(var: str) -> list[int] | None:
     """Parse a comma-separated env var into a list of ints, or None."""
     val = os.environ.get(var)
@@ -142,6 +153,7 @@ def main(
             logger.info("Ingesting local file: %s", filepath)
             count = ingest_local_file(filepath, conninfo)
             total_rows += count
+        _analyze(conninfo)
         logger.info(
             "Done: ingested %d file(s), %d rows total", len(from_files), total_rows
         )
@@ -171,6 +183,9 @@ def main(
             status, count = future.result()
             stats[status] += 1
             total_rows += count
+
+    if stats["ingested"] > 0:
+        _analyze(conninfo)
 
     logger.info(
         "Done: %d ingested (%d rows), %d skipped, %d failed",
