@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import io
 import math
 from dataclasses import dataclass
 from pathlib import Path
@@ -24,13 +25,14 @@ class ParsedCatalog:
     rows: list[tuple]
 
 
-def parse_fits(filepath: Path) -> ParsedCatalog:
+def parse_fits(source: Path | bytes) -> ParsedCatalog:
     """Parse a refpsfcat FITS file into structured data.
 
-    Returns a ParsedCatalog with header metadata and a list of row tuples
-    ready for database insertion (source-level columns only).
+    Accepts a file path or raw bytes. Returns a ParsedCatalog with header
+    metadata and a list of row tuples ready for database insertion.
     """
-    with fits.open(filepath) as hdul:
+    fileobj = io.BytesIO(source) if isinstance(source, bytes) else source
+    with fits.open(fileobj) as hdul:
         header = hdul[0].header
         data = hdul[1].data
 

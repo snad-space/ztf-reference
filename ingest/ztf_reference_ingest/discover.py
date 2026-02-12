@@ -43,6 +43,8 @@ class FileRef:
 def generate_all_refs(
     fieldids: list[int] | None = None,
     filters: list[str] | None = None,
+    ccdids: list[int] | None = None,
+    qids: list[int] | None = None,
 ) -> list[FileRef]:
     """Generate FileRef objects for all valid combinations.
 
@@ -52,11 +54,13 @@ def generate_all_refs(
         fieldids = discover_fieldids()
 
     filter_list = filters or ["zg", "zr", "zi"]
+    ccdid_list = ccdids or list(range(1, 17))
+    qid_list = qids or list(range(1, 5))
     refs = []
     for fieldid in fieldids:
         for filt in filter_list:
-            for ccdid in range(1, 17):
-                for qid in range(1, 5):
+            for ccdid in ccdid_list:
+                for qid in qid_list:
                     refs.append(
                         FileRef(fieldid=fieldid, filter=filt, ccdid=ccdid, qid=qid)
                     )

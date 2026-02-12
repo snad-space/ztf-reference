@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import logging
 import os
-import tempfile
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
@@ -27,16 +26,18 @@ def get_conninfo() -> str:
     return f"host={host} dbname={dbname} user={user}"
 
 
-def process_one(ref: FileRef, conninfo: str, tmpdir: str) -> tuple[str, int]:
+def process_one(ref: FileRef, conninfo: str) -> tuple[str, int]:
     """Download and ingest a single file. Returns (status, row_count)."""
     conn = psycopg.connect(conninfo, autocommit=False)
     client = httpx.Client()
     try:
-        result = download_if_changed(client, conn, ref, tmpdir)
+        result = download_if_changed(client, conn, ref)
         if result is None:
             return ("skipped", 0)
 
-        catalog = parse_fits(result.filepath)
+        catalog = parse_fits(result.content)
+        # Free the downloaded bytes now that they've been parsed
+        del result.content
         count = ingest_catalog(
             conn,
             catalog,
@@ -45,7 +46,6 @@ def process_one(ref: FileRef, conninfo: str, tmpdir: str) -> tuple[str, int]:
             last_modified=result.last_modified,
             content_length=result.content_length,
         )
-        result.filepath.unlink(missing_ok=True)
         return ("ingested", count)
     except Exception:
         logger.exception("Failed to process %s", ref.path)
@@ -71,6 +71,22 @@ def ingest_local_file(filepath: Path, conninfo: str) -> int:
         conn.close()
 
 
+def _env_ints(var: str) -> list[int] | None:
+    """Parse a comma-separated env var into a list of ints, or None."""
+    val = os.environ.get(var)
+    if not val:
+        return None
+    return [int(x.strip()) for x in val.split(",")]
+
+
+def _env_strings(var: str) -> list[str] | None:
+    """Parse a comma-separated env var into a list of strings, or None."""
+    val = os.environ.get(var)
+    if not val:
+        return None
+    return [x.strip() for x in val.split(",")]
+
+
 @click.command()
 @click.option("--workers", default=10, help="Number of parallel download workers")
 @click.option(
@@ -82,6 +98,18 @@ def ingest_local_file(filepath: Path, conninfo: str) -> int:
     type=click.Choice(["zg", "zr", "zi"]),
     multiple=True,
     help="Only process specific filters",
+)
+@click.option(
+    "--ccdid",
+    type=click.IntRange(1, 16),
+    multiple=True,
+    help="Only process specific CCD IDs (1-16)",
+)
+@click.option(
+    "--qid",
+    type=click.IntRange(1, 4),
+    multiple=True,
+    help="Only process specific quadrant IDs (1-4)",
 )
 @click.option("--dry-run", is_flag=True, help="List files without downloading")
 @click.option(
@@ -95,6 +123,8 @@ def main(
     workers: int,
     fieldid: tuple[int, ...],
     filters: tuple[str, ...],
+    ccdid: tuple[int, ...],
+    qid: tuple[int, ...],
     dry_run: bool,
     from_files: tuple[Path, ...],
 ):
@@ -117,9 +147,13 @@ def main(
         )
         return
 
-    fieldids = list(fieldid) if fieldid else None
-    filter_list = list(filters) if filters else None
-    refs = generate_all_refs(fieldids=fieldids, filters=filter_list)
+    fieldids = list(fieldid) if fieldid else _env_ints("INGEST_FIELDID")
+    filter_list = list(filters) if filters else _env_strings("INGEST_FILTER")
+    ccdids = list(ccdid) if ccdid else _env_ints("INGEST_CCDID")
+    qids = list(qid) if qid else _env_ints("INGEST_QID")
+    refs = generate_all_refs(
+        fieldids=fieldids, filters=filter_list, ccdids=ccdids, qids=qids
+    )
     logger.info("Total files to process: %d", len(refs))
 
     if dry_run:
@@ -130,16 +164,13 @@ def main(
     stats = {"ingested": 0, "skipped": 0, "failed": 0}
     total_rows = 0
 
-    with tempfile.TemporaryDirectory() as tmpdir:
-        with ThreadPoolExecutor(max_workers=workers) as executor:
-            futures = {
-                executor.submit(process_one, ref, conninfo, tmpdir): ref for ref in refs
-            }
-            for future in as_completed(futures):
-                ref = futures[future]
-                status, count = future.result()
-                stats[status] += 1
-                total_rows += count
+    with ThreadPoolExecutor(max_workers=workers) as executor:
+        futures = {executor.submit(process_one, ref, conninfo): ref for ref in refs}
+        for future in as_completed(futures):
+            ref = futures[future]
+            status, count = future.result()
+            stats[status] += 1
+            total_rows += count
 
     logger.info(
         "Done: %d ingested (%d rows), %d skipped, %d failed",

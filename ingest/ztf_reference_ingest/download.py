@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from pathlib import Path
 
 import httpx
 import psycopg
@@ -16,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class DownloadResult:
-    filepath: Path
+    content: bytes
     etag: str | None
     last_modified: str | None
     content_length: int | None
@@ -41,7 +40,6 @@ def download_if_changed(
     client: httpx.Client,
     conn: psycopg.Connection,
     ref: FileRef,
-    tmpdir: str,
 ) -> DownloadResult | None:
     """Download a FITS file if it has changed since last ingest.
 
@@ -84,11 +82,8 @@ def download_if_changed(
         logger.warning("Download failed: %s", ref.url)
         return None
 
-    filename = f"{ref.fieldid}_{ref.filter}_{ref.ccdid}_{ref.qid}.fits"
-    filepath = Path(tmpdir) / filename
-    filepath.write_bytes(resp.content)
     return DownloadResult(
-        filepath=filepath,
+        content=resp.content,
         etag=etag,
         last_modified=last_modified,
         content_length=content_length,
