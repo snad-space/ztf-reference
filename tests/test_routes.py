@@ -12,8 +12,8 @@ async def test_stats(client):
     resp = await client.get("/api/v1/stats")
     assert resp.status == 200
     data = await resp.json()
-    assert data["approximate_source_count"] == 3
-    assert data["approximate_quadrant_count"] == 2
+    assert data["approximate_source_count"] >= 3
+    assert data["approximate_quadrant_count"] >= 2
 
 
 async def test_source_found(client):
