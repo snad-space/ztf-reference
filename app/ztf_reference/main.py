@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import os
 
-from aiohttp.web import Application
+from aiohttp.web import Application, run_app
 from asyncpg import create_pool
 
 from .pg_sphere import connection_setup
@@ -28,3 +28,11 @@ async def get_app() -> Application:
     app.on_cleanup.append(on_cleanup)
     app.add_routes(routes)
     return app
+
+
+def main():
+    run_app(get_app(), host="0.0.0.0", port=80)
+
+
+if __name__ == "__main__":
+    main()

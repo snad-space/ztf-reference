@@ -8,6 +8,14 @@ async def test_health(client):
     assert data["status"] == "ok"
 
 
+async def test_stats(client):
+    resp = await client.get("/api/v1/stats")
+    assert resp.status == 200
+    data = await resp.json()
+    assert data["approximate_source_count"] == 3
+    assert data["approximate_quadrant_count"] == 2
+
+
 async def test_source_found(client):
     resp = await client.get(
         "/api/v1/source",
@@ -21,6 +29,7 @@ async def test_source_found(client):
     assert data["ra"] == pytest.approx(24.9859705, abs=1e-5)
     assert data["magzp"] == pytest.approx(26.325, abs=0.001)
     assert data["infobits"] == 16
+    assert data["oid"] == "2021101100000000"
 
 
 async def test_source_not_found(client):
@@ -36,6 +45,47 @@ async def test_source_missing_param(client):
         "/api/v1/source",
         params={"fieldid": 202, "filter": "zg"},
     )
+    assert resp.status == 400
+
+
+async def test_object_found(client):
+    resp = await client.get("/api/v1/object", params={"oid": "2021101100000000"})
+    assert resp.status == 200
+    data = await resp.json()
+    assert data["fieldid"] == 202
+    assert data["filter"] == "zg"
+    assert data["ccdid"] == 10
+    assert data["qid"] == 1
+    assert data["sourceid"] == 0
+    assert data["oid"] == "2021101100000000"
+
+
+async def test_object_found_zr(client):
+    resp = await client.get("/api/v1/object", params={"oid": "202210100000000"})
+    assert resp.status == 200
+    data = await resp.json()
+    assert data["fieldid"] == 202
+    assert data["filter"] == "zr"
+    assert data["ccdid"] == 10
+    assert data["qid"] == 1
+    assert data["sourceid"] == 0
+    assert data["oid"] == "202210100000000"
+    assert data["magzp"] == pytest.approx(26.190, abs=0.001)
+    assert data["infobits"] == 0
+
+
+async def test_object_not_found(client):
+    resp = await client.get("/api/v1/object", params={"oid": "9991101100000000"})
+    assert resp.status == 404
+
+
+async def test_object_invalid(client):
+    resp = await client.get("/api/v1/object", params={"oid": "abc"})
+    assert resp.status == 400
+
+
+async def test_object_missing_param(client):
+    resp = await client.get("/api/v1/object")
     assert resp.status == 400
 
 

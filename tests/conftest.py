@@ -25,7 +25,9 @@ try:
             await con.execute(
                 """
                 INSERT INTO quadrant (fieldid, filter, ccdid, qid, magzp, magzp_rms, magzp_unc, infobits)
-                VALUES (202, 'zg', 10, 1, 26.325, 0.0873030188, 0.0004818736, 16)
+                VALUES
+                    (202, 'zg', 10, 1, 26.325, 0.0873030188, 0.0004818736, 16),
+                    (202, 'zr', 10, 1, 26.190, 0.0650000000, 0.0003500000, 0)
                 ON CONFLICT DO NOTHING
                 """
             )
@@ -39,10 +41,15 @@ try:
                      237.02818, 18.01066, -5.937, 0.083, 13.16, 1.009, -0.058, 0),
                     (202, 'zg', 10, 1, 1, 1354.238, 62.677, 25.3803179, -29.6047335,
                      spoint(radians(25.3803179), radians(-29.6047335)),
-                     68.48572, 21.969954, -4.589, 0.348, 3.12, 1.459, -0.452, 0)
+                     68.48572, 21.969954, -4.589, 0.348, 3.12, 1.459, -0.452, 0),
+                    (202, 'zr', 10, 1, 0, 119.791, 61.432, 24.9859705, -29.6089428,
+                     spoint(radians(24.9859705), radians(-29.6089428)),
+                     310.50000, 15.20000, -6.230, 0.053, 20.43, 0.995, -0.041, 0)
                 ON CONFLICT DO NOTHING
                 """
             )
+            await con.execute("ANALYZE quadrant")
+            await con.execute("ANALYZE refpsfcat")
         await pool.close()
 
     @pytest_asyncio.fixture
