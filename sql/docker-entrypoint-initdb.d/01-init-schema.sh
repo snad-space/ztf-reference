@@ -71,5 +71,7 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
     GRANT SELECT, INSERT, UPDATE, DELETE ON quadrant TO ingest;
     GRANT SELECT, INSERT, UPDATE, DELETE ON refpsfcat TO ingest;
     GRANT SELECT, INSERT, UPDATE, DELETE ON ingest_metadata TO ingest;
+    GRANT MAINTAIN ON quadrant TO ingest;
+    GRANT MAINTAIN ON refpsfcat TO ingest;
     REVOKE CREATE ON SCHEMA public FROM public;
 EOSQL

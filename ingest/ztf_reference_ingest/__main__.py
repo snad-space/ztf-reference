@@ -28,7 +28,7 @@ def get_conninfo() -> str:
 
 def process_one(ref: FileRef, conninfo: str) -> tuple[str, int]:
     """Download and ingest a single file. Returns (status, row_count)."""
-    conn = psycopg.connect(conninfo, autocommit=False)
+    conn = psycopg.connect(conninfo, autocommit=True)
     client = httpx.Client()
     try:
         result = download_if_changed(client, conn, ref)
@@ -64,7 +64,7 @@ def ingest_local_file(filepath: Path, conninfo: str) -> int:
         ccdid=catalog.ccdid,
         qid=catalog.qid,
     )
-    conn = psycopg.connect(conninfo, autocommit=False)
+    conn = psycopg.connect(conninfo, autocommit=True)
     try:
         return ingest_catalog(conn, catalog, ref)
     finally:
