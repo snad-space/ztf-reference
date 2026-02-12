@@ -29,7 +29,7 @@ async def test_source_found(client):
     assert data["ra"] == pytest.approx(24.9859705, abs=1e-5)
     assert data["magzp"] == pytest.approx(26.325, abs=0.001)
     assert data["infobits"] == 16
-    assert data["oid"] == "2021101100000000"
+    assert data["oid"] == "202110100000000"
 
 
 async def test_source_not_found(client):
@@ -49,7 +49,7 @@ async def test_source_missing_param(client):
 
 
 async def test_object_found(client):
-    resp = await client.get("/api/v1/object", params={"oid": "2021101100000000"})
+    resp = await client.get("/api/v1/object", params={"oid": "202110100000000"})
     assert resp.status == 200
     data = await resp.json()
     assert data["fieldid"] == 202
@@ -57,7 +57,7 @@ async def test_object_found(client):
     assert data["ccdid"] == 10
     assert data["qid"] == 1
     assert data["sourceid"] == 0
-    assert data["oid"] == "2021101100000000"
+    assert data["oid"] == "202110100000000"
 
 
 async def test_object_found_zr(client):
@@ -103,7 +103,7 @@ async def test_cone_search(client):
 async def test_cone_search_with_filter(client):
     resp = await client.get(
         "/api/v1/cone",
-        params={"ra": 24.986, "dec": -29.609, "radius_arcsec": 60, "filter": "zr"},
+        params={"ra": 24.986, "dec": -29.609, "radius_arcsec": 60, "filter": "zi"},
     )
     assert resp.status == 200
     data = await resp.json()
