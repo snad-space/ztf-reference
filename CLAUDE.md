@@ -18,7 +18,7 @@ docker compose --profile ingest run --rm ingest --fieldid=202
 # Monthly cron re-ingest (downloads only changed files via etag)
 docker compose --profile ingest run --rm ingest
 
-# Development stack (separate DB volume, dev.ref.ztf.snad.space host, ingests field 202 only)
+# Development stack (separate DB volume, dev.ref.ztf.snad.space host, ingests field 202/zg/ccd10 only)
 docker compose -f docker-compose.yml -f docker-compose-dev.yml up sql app
 docker compose -f docker-compose.yml -f docker-compose-dev.yml --profile ingest run --rm ingest
 ```

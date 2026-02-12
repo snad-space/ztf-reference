@@ -1,0 +1,19 @@
+services:
+  sql:
+    volumes:
+      - sql-data-dev:/var/lib/postgresql/data
+
+  app:
+    environment:
+      VIRTUAL_HOST: dev.ref.ztf.snad.space
+      DYNDNS_HOST: dev.ref.ztf.snad.space
+      LETSENCRYPT_HOST: dev.ref.ztf.snad.space
+
+  ingest:
+    environment:
+      INGEST_FIELDID: "202"
+      INGEST_FILTER: "zg"
+      INGEST_CCDID: "10"
+
+volumes:
+  sql-data-dev:
