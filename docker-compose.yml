@@ -30,6 +30,7 @@ services:
 
   ingest:
     build: ./ingest/
+    entrypoint: ["/usr/local/bin/cron-entrypoint.sh"]
     environment:
       DB_HOST: sql
       DB_NAME: ztfref
@@ -38,8 +39,7 @@ services:
       - sql
     networks:
       - app
-    profiles:
-      - ingest
+    restart: always
 
 volumes:
   sql-data:

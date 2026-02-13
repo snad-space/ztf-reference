@@ -10,6 +10,10 @@ services:
       LETSENCRYPT_HOST: dev.ref.ztf.snad.space
 
   ingest:
+    entrypoint: ["uv", "run", "python", "-m", "ztf_reference_ingest"]
+    profiles:
+      - ingest
+    restart: "no"
     environment:
       INGEST_FIELDID: "202"
       INGEST_FILTER: "zg"
