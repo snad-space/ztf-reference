@@ -4,17 +4,16 @@ from __future__ import annotations
 
 import logging
 import os
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import ProcessPoolExecutor, as_completed
 from pathlib import Path
 
 import click
-import httpx
 import psycopg
 
 from .db import ingest_catalog
 from .discover import FileRef, generate_all_refs
-from .download import download_if_changed
 from .fits import parse_fits
+from .worker import _init_worker, process_one
 
 logger = logging.getLogger(__name__)
 
@@ -24,35 +23,6 @@ def get_conninfo() -> str:
     dbname = os.environ.get("DB_NAME", "ztfref")
     user = os.environ.get("DB_USER", "ingest")
     return f"host={host} dbname={dbname} user={user}"
-
-
-def process_one(ref: FileRef, conninfo: str) -> tuple[str, int]:
-    """Download and ingest a single file. Returns (status, row_count)."""
-    conn = psycopg.connect(conninfo, autocommit=True)
-    client = httpx.Client()
-    try:
-        result = download_if_changed(client, conn, ref)
-        if result is None:
-            return ("skipped", 0)
-
-        catalog = parse_fits(result.content)
-        # Free the downloaded bytes now that they've been parsed
-        del result.content
-        count = ingest_catalog(
-            conn,
-            catalog,
-            ref,
-            etag=result.etag,
-            last_modified=result.last_modified,
-            content_length=result.content_length,
-        )
-        return ("ingested", count)
-    except Exception:
-        logger.exception("Failed to process %s", ref.path)
-        return ("failed", 0)
-    finally:
-        client.close()
-        conn.close()
 
 
 def ingest_local_file(filepath: Path, conninfo: str) -> int:
@@ -176,7 +146,7 @@ def main(
     stats = {"ingested": 0, "skipped": 0, "failed": 0}
     total_rows = 0
 
-    with ThreadPoolExecutor(max_workers=workers) as executor:
+    with ProcessPoolExecutor(max_workers=workers, initializer=_init_worker) as executor:
         futures = {executor.submit(process_one, ref, conninfo): ref for ref in refs}
         for future in as_completed(futures):
             ref = futures[future]

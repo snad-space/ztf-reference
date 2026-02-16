@@ -5,7 +5,7 @@ services:
       POSTGRES_USER: ztfref
       POSTGRES_PASSWORD: ztfref
     volumes:
-      - sql-data:/var/lib/postgresql/data
+      - /srv/data/ztf-reference/sql-data:/var/lib/postgresql/data
     networks:
       - app
     restart: always
@@ -40,9 +40,6 @@ services:
     networks:
       - app
     restart: always
-
-volumes:
-  sql-data:
 
 networks:
   app:

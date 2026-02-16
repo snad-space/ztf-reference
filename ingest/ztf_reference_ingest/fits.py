@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import io
-import math
 from dataclasses import dataclass
 from pathlib import Path
 
+import numpy as np
 from astropy.io import fits
 
 FILTER_MAP = {1: "zg", 2: "zr", 3: "zi"}
@@ -47,35 +47,48 @@ def parse_fits(source: Path | bytes) -> ParsedCatalog:
         magzp_unc = float(header.get("MAGZPUNC", 0.0))
         infobits = int(header["INFOBITS"])
 
-        rows = []
-        for i in range(len(data)):
-            row = data[i]
-            ra = float(row["ra"])
-            dec = float(row["dec"])
-            coord_sql = f"({math.radians(ra)}, {math.radians(dec)})"
+        # Vectorized column extraction — avoids per-row Python loop
+        ra = data["ra"].astype(np.float64)
+        dec = data["dec"].astype(np.float64)
+        ra_rad = np.radians(ra)
+        dec_rad = np.radians(dec)
 
-            rows.append(
-                (
-                    fieldid,
-                    filt,
-                    ccdid,
-                    qid,
-                    int(row["sourceid"]),
-                    float(row["xpos"]),
-                    float(row["ypos"]),
-                    ra,
-                    dec,
-                    coord_sql,
-                    float(row["flux"]),
-                    float(row["sigflux"]),
-                    float(row["mag"]),
-                    float(row["sigmag"]),
-                    float(row["snr"]),
-                    float(row["chi"]),
-                    float(row["sharp"]),
-                    int(row["flags"]),
-                )
+        sourceids = data["sourceid"].astype(np.int64)
+        xpos = data["xpos"].astype(np.float64)
+        ypos = data["ypos"].astype(np.float64)
+        flux = data["flux"].astype(np.float64)
+        sigflux = data["sigflux"].astype(np.float64)
+        mag = data["mag"].astype(np.float64)
+        sigmag = data["sigmag"].astype(np.float64)
+        snr = data["snr"].astype(np.float64)
+        chi = data["chi"].astype(np.float64)
+        sharp = data["sharp"].astype(np.float64)
+        flags = data["flags"].astype(np.int64)
+
+        n = len(data)
+        rows = [
+            (
+                fieldid,
+                filt,
+                ccdid,
+                qid,
+                int(sourceids[i]),
+                float(xpos[i]),
+                float(ypos[i]),
+                float(ra[i]),
+                float(dec[i]),
+                f"({ra_rad[i]}, {dec_rad[i]})",
+                float(flux[i]),
+                float(sigflux[i]),
+                float(mag[i]),
+                float(sigmag[i]),
+                float(snr[i]),
+                float(chi[i]),
+                float(sharp[i]),
+                int(flags[i]),
             )
+            for i in range(n)
+        ]
 
     return ParsedCatalog(
         fieldid=fieldid,
