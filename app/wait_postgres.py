@@ -15,9 +15,8 @@ def main():
 
     while True:
         try:
-            with psycopg.connect(conninfo) as con:
-                with con.cursor() as cur:
-                    cur.execute("SELECT 1 FROM refpsfcat LIMIT 0")
+            with psycopg.connect(conninfo) as con, con.cursor() as cur:
+                cur.execute("SELECT 1 FROM refpsfcat LIMIT 0")
             break
         except (psycopg.OperationalError, psycopg.errors.UndefinedTable):
             logging.info("Waiting for postgres to be available")
