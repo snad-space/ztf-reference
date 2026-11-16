@@ -2,10 +2,8 @@ import math
 from pathlib import Path
 
 import pytest
-
 from ztf_reference_ingest.discover import FileRef, generate_all_refs
 from ztf_reference_ingest.fits import parse_fits
-
 
 FIXTURES_DIR = Path(__file__).parent / "fixtures"
 EXAMPLE_FITS = FIXTURES_DIR / "ztf_000202_zg_c10_q1_refpsfcat.fits"
